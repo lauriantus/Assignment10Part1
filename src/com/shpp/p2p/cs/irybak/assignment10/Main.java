@@ -61,7 +61,7 @@ public class Main {
     };
     static int mistakes = 0;
     static boolean mist;
-    
+
     public static void main(String[] args) {
         String formula = args[0];
         String[] variables = new String[args.length];
@@ -74,6 +74,7 @@ public class Main {
     static ArrayList<Character> operands = new ArrayList<>();
     static ArrayList<Character> variables = new ArrayList<>();
     static ArrayList<Integer> numbers = new ArrayList<>();
+    static ArrayList<Integer> values = new ArrayList<>();
     static ArrayList<Object> totalFormula = new ArrayList<>();
 
     /**
@@ -118,8 +119,26 @@ public class Main {
     }
 
     private static void parsingVariables(String[] variables) {
-
+        for (String variable : variables) {
+            values.add(getNumber(deleteSpaces(variable)));
+        }
     }
+
+    private static Integer getNumber(String variable) {
+        /* get value for every variables */
+        StringBuilder value = new StringBuilder();
+        for (int i = variable.length(); i > 0; i--) {
+            char sym = variable.charAt(i - 1);
+            if (sym == '=') {
+                value.reverse();
+                return Integer.valueOf(value.toString());
+            } else if (isNumber(sym)) {
+                value.append(sym);
+            }
+        }
+        return null;
+    }
+
     private static void outTestsOnScreen() {
         for (Object o : totalFormula) {
             System.out.print(o + " ");
@@ -137,24 +156,38 @@ public class Main {
             System.out.print("[" + number + "] ");
         }
     }
+
     private static void shortForm(boolean formula) {
         if (formula) {
             operands.add('*');
             totalFormula.add('*');
         }
     }
+
     private static boolean isOperand(char sym) {
         return sym == '^' || sym == '/' || sym == '*' || sym == ','
                 || sym == '.' || sym == '=' || sym == '+' || sym == '-';
     }
+
     private static boolean isNumber(char sym) {
         return (sym >= '1' && sym <= '9') || sym == '0';
     }
+
     private static boolean isValue(char symbol) {
         for (int i = 'a'; i <= 'z'; i++) {
             if (symbol == i) return true;
         }
         return false;
+    }
+
+    private static String deleteSpaces(String s) {
+        StringBuilder sNew = new StringBuilder();
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) != ' ') {
+                sNew.append(s.charAt(i));
+            }
+        }
+        return sNew.toString();
     }
 
     private static void tests() {
@@ -199,7 +232,6 @@ public class Main {
         }
     }
 
-
     private static void getMistakeIfNeed(boolean formulaForTest, String x) {
         if (formulaForTest) {
             System.out.println(x);
@@ -221,22 +253,12 @@ public class Main {
         }
         return null;
     }
-
-
     /**
      * Видаляє всі пробіли з рівняння та параметрів(що б не подали на вхід, видаляє пробіли)
      *
      * @param s
      * @return
      */
-    private static String deleteSpaces(String s) {
-        StringBuilder sNew = new StringBuilder();
-        for (int i = 0; i < s.length(); i++) {
-            if (s.charAt(i) != ' ') {
-                sNew.append(s.charAt(i));
-            }
-        }
-        return sNew.toString();
-    }
+
 
 }
