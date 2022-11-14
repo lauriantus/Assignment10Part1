@@ -37,6 +37,10 @@ import java.util.ArrayList;
  * зміною знаку і отримуємо вже результат.
  */
 public class Main {
+    static String err = "\u001B[31m";
+    static String reset = "\u001B[0m";
+    static String ok = "\u001B[32m";
+    static String sss = "\u001B[36m";
 
     static String[] formulaForTests = {
             "",
@@ -48,12 +52,16 @@ public class Main {
             "*1",
             "=",
             "+",
-            "0,.1",
+            "0.1",
             "0*/1",
             "d",
             "acd",
             "A"
     };
+    static int mistakes = 0;
+    static boolean mist;
+
+
     static String[] variables = {
             "a",
             "b",
@@ -67,44 +75,58 @@ public class Main {
 
     private static void tests() {
         for (int i = 0; i < formulaForTests.length; i++) {
-            checksMistakes(formulaForTests[i]);
+            checksMistakes(formulaForTests[i], i);
         }
+        if (mistakes > 0) System.out.println(err + "Mistakes have mistakes for equal in " + mistakes + " tests!" + reset);
+        else System.out.println(ok + "All OK!" + reset);
+
     }
 
-    private static void checksMistakes(String formulaForTest) {
-        /* for "" */
-        if (formulaForTest.length() < 1) {
-            System.err.println("[" + formulaForTest + "]" + "\tDon't have the text for equal!");
-        }
+    private static void checksMistakes(String formulaForTest, int part) {
+        /* Розділення між формулами. Сама формула. Операція видалення пробілів для зручності підрахунку.*/
+        System.out.println("----------------------------");
+        System.out.println("[" + sss + formulaForTest + reset + "]");
+        formulaForTest = deleteSpaces(formulaForTest);
 
-        /* for " " */
-        StringBuilder test = new StringBuilder();
-        for (int i = 0; i < formulaForTest.length(); i++) {
-            if (formulaForTest.charAt(i) != ' ') test.append(formulaForTest.charAt(i));
-        }
-        if (test.isEmpty()) {
-            System.err.println("[" + formulaForTest + "]" + "\tDon't have the text for equal! Only spaces! This is incorrect");
-        }
+        /* видає помилку, якщо пустий рядок */
+        getMistakeIfNeed(formulaForTest.length() < 1, "Don't have the text for equal!");
 
         /* for "^^"*/
-        char[] symbols = {'^', '*', '/'};
-        for (int i = 0; i < formulaForTest.length() - 1; i++) {
+        for (int i = 0; i < formulaForTest.length(); i++) {
             char sym = formulaForTest.charAt(i);
-            char symNext = formulaForTest.charAt(i + 1);
-            if (sym == '^' || sym == '/' || sym == '*') {
-                if (symNext == '^' || symNext == '/'
-                        || symNext == '*' || symNext == '-'
-                        || symNext == '+' || symNext == '=') {
-                    System.err.println("[" + formulaForTest + "]" + "\tMistake in the " + i + " position on equal!");
+            if (sym == '^' || sym == '/' || sym == '*' || sym == ',' || sym == '.' || sym == '=') {
+                if (i == 0 || i == formulaForTest.length() - 1) {
+                    System.out.println("Problem with " + i + " position");
+                    mist = true;
+                } else {
+                    getMistakeIfNeed(!isValue(formulaForTest.charAt(i - 1)), ("Don't have value left from position " + i));
+                    getMistakeIfNeed(!isValue(formulaForTest.charAt(i + 1)), "Don't have value right from position " + i);
                 }
             }
         }
 
+        /* Додає невиконання одного тесту в систему підрахунку. Після додавання обнуляє стан помилки
+        * для наступного тесту.*/
+        if (mist) {
+            mistakes++;
+            mist = false;
+        }
     }
 
-    private static void parsing(String[] args) {
-        for (int i = 0; i < args.length; i++) {
+    private static boolean isValue(char symbol) {
+        for (int i = 'a'; i <= 'z'; i++) {
+            if (symbol == i) return true;
+        }
+        for (int i = '1'; i <= '9'; i++) {
+            if (symbol == i) return true;
+        }
+        return symbol == '0';
+    }
 
+    private static void getMistakeIfNeed(boolean formulaForTest, String x) {
+        if (formulaForTest) {
+            System.out.println(x);
+            mist = true;
         }
     }
 
@@ -123,12 +145,6 @@ public class Main {
         return null;
     }
 
-    private static String getLeftPartEqual(String formula, Integer pos) {
-        StringBuilder leftPart = new StringBuilder();
-        for (int i = pos; i > 0; i--) {
-        }
-        return null;
-    }
 
     /**
      * Видаляє всі пробіли з рівняння та параметрів(що б не подали на вхід, видаляє пробіли)
@@ -146,21 +162,4 @@ public class Main {
         return sNew.toString();
     }
 
-    private static double getValue(String curFormula) {
-        StringBuilder value = new StringBuilder();
-        for (int i = 0; i < curFormula.length(); i++) {
-            if (curFormula.charAt(i) == ' ' && value.isEmpty()) {
-                continue;
-            } else if (curFormula.charAt(i) >= '0' && curFormula.charAt(i) <= '9') {
-
-            } else {
-                System.out.println("Need value for exponent for correct equaling!");
-                System.exit(0);
-            }
-        }
-        if (value.isEmpty()) {
-            System.out.println();
-        }
-        return 0;
-    }
 }
