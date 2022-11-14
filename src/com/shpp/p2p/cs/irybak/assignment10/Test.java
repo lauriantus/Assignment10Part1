@@ -3,32 +3,15 @@ package com.shpp.p2p.cs.irybak.assignment10;
 import static com.shpp.p2p.cs.irybak.assignment10.Main.*;
 
 public class Test {
-    static String[] formulaForTests = {
-            "",
-            " ",
-            "^^",
-            "^",
-            "1^",
-            "1*",
-            "*1",
-            "=",
-            "+",
-            "0.1",
-            "0*+1",
-            "d",
-            "acd",
-            "A",
-            "a"
-    };
     static int mistakes = 0;
     static boolean mist;
     public static void main(String[] args) {
 
     }
 
-    public static void tests() {
-        for (int i = 0; i < formulaForTests.length; i++) {
-            checksMistakes(formulaForTests[i], i);
+    public static void tests(String formula) {
+        for (int i = 0; i < formula.length(); i++) {
+            checksMistakes(String.valueOf(formula.charAt(i)), i);
         }
         if (mistakes > 0)
             System.out.println(err + "Mistakes have mistakes for equal in " + mistakes + " tests!" + reset);
@@ -65,6 +48,28 @@ public class Test {
             mistakes++;
             mist = false;
         }
+    }
+
+    static void outTestsOnScreen() {
+        System.out.println();
+        printFormula();
+        System.out.println();
+        for (Character operand : operands) {
+            System.out.print("[" + operand + "] ");
+        }
+        System.out.println();
+        for (Character variable : variables) {
+            System.out.print("[" + variable + "] ");
+        }
+        System.out.println();
+        for (Double number : numbers) {
+            System.out.print("[" + number + "] ");
+        }
+        System.out.println();
+        for (Double value : values) {
+            System.out.print("[" + value + "] ");
+        }
+        System.out.println("\nSize var = " + variables.size() + "\tSize val = " + values.size());
     }
     private static void getMistakeIfNeed(boolean formulaForTest, String x) {
         if (formulaForTest) {

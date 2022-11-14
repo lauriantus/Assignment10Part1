@@ -44,15 +44,15 @@ public class Main {
 
     public static void main(String[] args) {
         String formula = args[0];
+        Test.tests(deleteSpaces(formula)); // FIXME
         String[] variables = new String[args.length - 1];
         System.arraycopy(args, 1, variables, 0, args.length - 1);
 
         parsingFormula(formula);
         parsingVariables(variables);
-        for (Object o : totalFormula) {
-            System.out.print(o + " ");
-        }
+        printFormula();
         setFormulaWithValues();
+        printFormula();
         for (int i = totalFormula.size() - 1; i > 0; i--) {
             if (totalFormula.get(i).equals('^')) {
                 Double value = (Double) totalFormula.get(i - 1);
@@ -62,15 +62,44 @@ public class Main {
                 totalFormula.remove(i - 1);
             }
         }
-        for (int i = 0; i < totalFormula.size(); i++) {
+        printFormula();
+        for (int i = 1; i < totalFormula.size(); i++) {
             i = mathSimple(i, '*');
             i = mathSimple(i, '/');
         }
-//        for (int i = 0; i < totalFormula.size(); i++) {
-//            i = mathSimple(i, '+');
-//            i = mathSimple(i, '-');
-//        }
-        outTestsOnScreen();
+        printFormula();
+        setsPlusMinus();
+        for (int i = 0; i < totalFormula.size(); i++) {
+            i = mathSimple(i, '+');
+            i = mathSimple(i, '-');
+        }
+        printFormula();
+    }
+
+    private static void setsPlusMinus() {
+        for (int i = 0; i < totalFormula.size(); i++) {
+            if (totalFormula.get(i).equals('+') && totalFormula.get(i + 1).equals('+')) {
+                totalFormula.remove(i + 1);
+                i = 0;
+            }
+            if (totalFormula.get(i).equals('+') && totalFormula.get(i + 1).equals('-')
+                    || totalFormula.get(i).equals('-') && totalFormula.get(i + 1).equals('+')) {
+                totalFormula.remove(i);
+                i = 0;
+            }
+            if (totalFormula.get(i).equals('-') && totalFormula.get(i + 1).equals('-')) {
+                totalFormula.remove(i + 1);
+                totalFormula.set(i, '+');
+                i = 0;
+            }
+        }
+    }
+
+    public static void printFormula() {
+        for (Object o : totalFormula) {
+            System.out.print(o + " ");
+        }
+        System.out.println();
     }
 
     private static int mathSimple(int i, char obj) {
@@ -223,30 +252,6 @@ public class Main {
             }
         }
         return sNew.toString();
-    }
-
-    static void outTestsOnScreen() {
-        System.out.println();
-        for (Object o : totalFormula) {
-            System.out.print(o + " ");
-        }
-        System.out.println();
-        for (Character operand : operands) {
-            System.out.print("[" + operand + "] ");
-        }
-        System.out.println();
-        for (Character variable : variables) {
-            System.out.print("[" + variable + "] ");
-        }
-        System.out.println();
-        for (Double number : numbers) {
-            System.out.print("[" + number + "] ");
-        }
-        System.out.println();
-        for (Double value : values) {
-            System.out.print("[" + value + "] ");
-        }
-        System.out.println("\nSize var = " + variables.size() + "\tSize val = " + values.size());
     }
 
 
