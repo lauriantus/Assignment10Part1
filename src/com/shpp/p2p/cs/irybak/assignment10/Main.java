@@ -53,31 +53,116 @@ public class Main {
             "=",
             "+",
             "0.1",
-            "0*/1",
+            "0*+1",
             "d",
             "acd",
-            "A"
+            "A",
+            "a"
     };
     static int mistakes = 0;
     static boolean mist;
-
-
-    static String[] variables = {
-            "a",
-            "b",
-            "c"
-    };
-    static ArrayList<String> formula = new ArrayList<>();
-
+    
     public static void main(String[] args) {
-        tests();
+        String formula = args[0];
+        String[] variables = new String[args.length];
+        System.arraycopy(args, 1, variables, 1, args.length - 1);
+
+        parsingFormula(formula);
+        parsingVariables(variables);
+    }
+
+    static ArrayList<Character> operands = new ArrayList<>();
+    static ArrayList<Character> variables = new ArrayList<>();
+    static ArrayList<Integer> numbers = new ArrayList<>();
+    static ArrayList<Object> totalFormula = new ArrayList<>();
+
+    /**
+     * Першим символом можу бути лише змінна або число
+     *
+     * @param formula
+     */
+    private static void parsingFormula(String formula) {
+        System.out.println("\u001B[35m" + formula + reset);
+        System.out.println("--------------------------------------------");
+        StringBuilder num = new StringBuilder();
+        char flag = 0;
+        for (int i = 0; i < formula.length(); i++) {
+            char sym = formula.charAt(i);           // покращуємо швидкодію, за рахунок зменшення виклику метода
+            /* якщо це число, то дадаємо в змінну всі цифри з числа, інакше переходимо далі*/
+            if (isNumber(sym)) {
+                num.append(sym);            // з цифр створюємо число
+                /* для випадку коли стоъть цифра, а за нею змінна(необхідно завершити вводити число) */
+                if ((i + 1) < formula.length() && !isNumber(formula.charAt(i + 1))) {
+                    numbers.add(Integer.parseInt(num.toString()));
+                    totalFormula.add(num);
+                    num = new StringBuilder();
+                }
+                /* для випадку коли стоїть цифра, а за нею літера(пропущене множення) */
+                if ((i + 1) < formula.length()) {
+                    shortForm(isValue(formula.charAt(i + 1)));
+                }
+                /* Якщо це змінна, тоді додаємо її до списку змінних */
+            } else if (isValue(sym)) {
+                variables.add(sym);
+                totalFormula.add(sym);
+                /* для випадку коли стоїть цифра, а за нею літера(пропущене множення) */
+                if ((i + 1) < formula.length()) {
+                    shortForm(isNumber(formula.charAt(i + 1)));
+                }
+            } else if (isOperand(sym)) {
+                operands.add(sym);
+                totalFormula.add(sym);
+            }
+        }
+        outTestsOnScreen();
+    }
+
+    private static void parsingVariables(String[] variables) {
+
+    }
+    private static void outTestsOnScreen() {
+        for (Object o : totalFormula) {
+            System.out.print(o + " ");
+        }
+        System.out.println();
+        for (Character operand : operands) {
+            System.out.print("[" + operand + "] ");
+        }
+        System.out.println();
+        for (Character variable : variables) {
+            System.out.print("[" + variable + "] ");
+        }
+        System.out.println();
+        for (Integer number : numbers) {
+            System.out.print("[" + number + "] ");
+        }
+    }
+    private static void shortForm(boolean formula) {
+        if (formula) {
+            operands.add('*');
+            totalFormula.add('*');
+        }
+    }
+    private static boolean isOperand(char sym) {
+        return sym == '^' || sym == '/' || sym == '*' || sym == ','
+                || sym == '.' || sym == '=' || sym == '+' || sym == '-';
+    }
+    private static boolean isNumber(char sym) {
+        return (sym >= '1' && sym <= '9') || sym == '0';
+    }
+    private static boolean isValue(char symbol) {
+        for (int i = 'a'; i <= 'z'; i++) {
+            if (symbol == i) return true;
+        }
+        return false;
     }
 
     private static void tests() {
         for (int i = 0; i < formulaForTests.length; i++) {
             checksMistakes(formulaForTests[i], i);
         }
-        if (mistakes > 0) System.out.println(err + "Mistakes have mistakes for equal in " + mistakes + " tests!" + reset);
+        if (mistakes > 0)
+            System.out.println(err + "Mistakes have mistakes for equal in " + mistakes + " tests!" + reset);
         else System.out.println(ok + "All OK!" + reset);
 
     }
@@ -91,37 +176,29 @@ public class Main {
         /* видає помилку, якщо пустий рядок */
         getMistakeIfNeed(formulaForTest.length() < 1, "Don't have the text for equal!");
 
-        /* for "^^"*/
+        /* Видає помилку якщо відбувається подвоєння знаку множення, ділення, піднесення до степеня, коми, крапки
+         * або їх комбінування. Також при комбінуванні цих знаків з плюсом чи мінусом */
         for (int i = 0; i < formulaForTest.length(); i++) {
             char sym = formulaForTest.charAt(i);
-            if (sym == '^' || sym == '/' || sym == '*' || sym == ',' || sym == '.' || sym == '=') {
+            if (isOperand(sym)) {
                 if (i == 0 || i == formulaForTest.length() - 1) {
                     System.out.println("Problem with " + i + " position");
                     mist = true;
-                } else {
-                    getMistakeIfNeed(!isValue(formulaForTest.charAt(i - 1)), ("Don't have value left from position " + i));
-                    getMistakeIfNeed(!isValue(formulaForTest.charAt(i + 1)), "Don't have value right from position " + i);
+                } else if (sym != '+' && sym != '-') {
+                    getMistakeIfNeed(isValue(formulaForTest.charAt(i - 1)), ("Don't have value left from position " + i));
+                    getMistakeIfNeed(isValue(formulaForTest.charAt(i + 1)), "Don't have value right from position " + i);
                 }
             }
         }
 
         /* Додає невиконання одного тесту в систему підрахунку. Після додавання обнуляє стан помилки
-        * для наступного тесту.*/
+         * для наступного тесту.*/
         if (mist) {
             mistakes++;
             mist = false;
         }
     }
 
-    private static boolean isValue(char symbol) {
-        for (int i = 'a'; i <= 'z'; i++) {
-            if (symbol == i) return true;
-        }
-        for (int i = '1'; i <= '9'; i++) {
-            if (symbol == i) return true;
-        }
-        return symbol == '0';
-    }
 
     private static void getMistakeIfNeed(boolean formulaForTest, String x) {
         if (formulaForTest) {
