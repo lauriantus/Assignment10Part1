@@ -64,18 +64,53 @@ public class Main {
 
     public static void main(String[] args) {
         String formula = args[0];
-        String[] variables = new String[args.length];
-        System.arraycopy(args, 1, variables, 1, args.length - 1);
+        String[] variables = new String[args.length - 1];
+        System.arraycopy(args, 1, variables, 0, args.length - 1);
 
         parsingFormula(formula);
         parsingVariables(variables);
+        getFormulaWithValues();
+
+        outTestsOnScreen();
+    }
+
+    private static void getFormulaWithValues() {
+        for (int i = 0, j = 0; i < totalFormula.size(); i++) {
+            if (variables.get(j).equals(totalFormula.get(i))) {
+                totalFormula.set(i, values.get(j));
+                j++;
+            }
+        }
     }
 
     static ArrayList<Character> operands = new ArrayList<>();
     static ArrayList<Character> variables = new ArrayList<>();
-    static ArrayList<Integer> numbers = new ArrayList<>();
-    static ArrayList<Integer> values = new ArrayList<>();
+    static ArrayList<Double> numbers = new ArrayList<>();
+    static ArrayList<Double> values = new ArrayList<>();
     static ArrayList<Object> totalFormula = new ArrayList<>();
+
+    private static void outTestsOnScreen() {
+        for (Object o : totalFormula) {
+            System.out.print(o + " ");
+        }
+        System.out.println();
+        for (Character operand : operands) {
+            System.out.print("[" + operand + "] ");
+        }
+        System.out.println();
+        for (Character variable : variables) {
+            System.out.print("[" + variable + "] ");
+        }
+        System.out.println();
+        for (Double number : numbers) {
+            System.out.print("[" + number + "] ");
+        }
+        System.out.println();
+        for (Double value : values) {
+            System.out.print("[" + value + "] ");
+        }
+        System.out.println("\nSize var = " + variables.size() + "\tSize val = " + values.size());
+    }
 
     /**
      * Першим символом можу бути лише змінна або число
@@ -94,7 +129,7 @@ public class Main {
                 num.append(sym);            // з цифр створюємо число
                 /* для випадку коли стоъть цифра, а за нею змінна(необхідно завершити вводити число) */
                 if ((i + 1) < formula.length() && !isNumber(formula.charAt(i + 1))) {
-                    numbers.add(Integer.parseInt(num.toString()));
+                    numbers.add(Double.parseDouble(num.toString()));
                     totalFormula.add(num);
                     num = new StringBuilder();
                 }
@@ -115,7 +150,6 @@ public class Main {
                 totalFormula.add(sym);
             }
         }
-        outTestsOnScreen();
     }
 
     private static void parsingVariables(String[] variables) {
@@ -124,37 +158,23 @@ public class Main {
         }
     }
 
-    private static Integer getNumber(String variable) {
+    private static Double getNumber(String variable) {
         /* get value for every variables */
         StringBuilder value = new StringBuilder();
         for (int i = variable.length(); i > 0; i--) {
             char sym = variable.charAt(i - 1);
             if (sym == '=') {
                 value.reverse();
-                return Integer.valueOf(value.toString());
-            } else if (isNumber(sym)) {
+                return Double.valueOf(value.toString());
+            } else if (isNumber(sym)
+            || sym == '-' || sym == '.' || sym == ',') {
+                if (sym == ',') {
+                    sym = '.';
+                }
                 value.append(sym);
             }
         }
         return null;
-    }
-
-    private static void outTestsOnScreen() {
-        for (Object o : totalFormula) {
-            System.out.print(o + " ");
-        }
-        System.out.println();
-        for (Character operand : operands) {
-            System.out.print("[" + operand + "] ");
-        }
-        System.out.println();
-        for (Character variable : variables) {
-            System.out.print("[" + variable + "] ");
-        }
-        System.out.println();
-        for (Integer number : numbers) {
-            System.out.print("[" + number + "] ");
-        }
     }
 
     private static void shortForm(boolean formula) {
@@ -217,7 +237,7 @@ public class Main {
                 if (i == 0 || i == formulaForTest.length() - 1) {
                     System.out.println("Problem with " + i + " position");
                     mist = true;
-                } else if (sym != '+' && sym != '-') {
+                } else if (sym != '+') {
                     getMistakeIfNeed(isValue(formulaForTest.charAt(i - 1)), ("Don't have value left from position " + i));
                     getMistakeIfNeed(isValue(formulaForTest.charAt(i + 1)), "Don't have value right from position " + i);
                 }
