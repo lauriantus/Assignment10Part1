@@ -2,6 +2,8 @@ package com.shpp.p2p.cs.irybak.assignment10;
 
 import java.util.ArrayList;
 
+import static com.shpp.p2p.cs.irybak.assignment10.Main.variables;
+
 /**
  * Змінною може записуватись лише однією маленькою латинською літерою. Якщо літери буде дві - це вважається множенням.
  * якщо знак відсутній перед числом, воно вважається додатнім. Так, як наявність дужок не врахована в цій версії
@@ -44,16 +46,25 @@ public class Main {
 
     public static void main(String[] args) {
         String formula = args[0];
-        Test.tests(deleteSpaces(formula)); // FIXME
-        String[] variables = new String[args.length - 1];
-        System.arraycopy(args, 1, variables, 0, args.length - 1);
+        String[] variables2 = new String[args.length - 1];
+        System.arraycopy(args, 1, variables2, 0, args.length - 1);
 
         parsingFormula(formula);
-        parsingVariables(variables);
-        printFormula();
+        parsingVariables(variables2);
         setFormulaWithValues();
-        printFormula();
+
+        for (Character operand : operands) {
+            System.out.print("[" + operand + "] ");
+        }
+        System.out.println();
+        System.out.println(totalFormula);
         for (int i = totalFormula.size() - 1; i > 0; i--) {
+            if (totalFormula.get(i).equals('-')) {
+                totalFormula.set(i + 1, (Double) totalFormula.get(i + 1) * -1);
+                totalFormula.remove(i);
+            } else if (totalFormula.get(i).equals('+')) {
+                totalFormula.remove(i);
+            }
             if (totalFormula.get(i).equals('^')) {
                 Double value = (Double) totalFormula.get(i - 1);
                 Double exponent = (Double) totalFormula.get(i + 1);
@@ -62,18 +73,22 @@ public class Main {
                 totalFormula.remove(i - 1);
             }
         }
-        printFormula();
+        System.out.println(totalFormula);
+
+        for (Character operand : operands) {
+            System.out.print("[" + operand + "] ");
+        }
+        System.out.println();
         for (int i = 1; i < totalFormula.size(); i++) {
             i = mathSimple(i, '*');
             i = mathSimple(i, '/');
         }
-        printFormula();
         setsPlusMinus();
+        System.out.println(totalFormula);
         for (int i = 0; i < totalFormula.size(); i++) {
             i = mathSimple(i, '+');
             i = mathSimple(i, '-');
         }
-        printFormula();
     }
 
     private static void setsPlusMinus() {
@@ -95,23 +110,27 @@ public class Main {
         }
     }
 
-    public static void printFormula() {
-        for (Object o : totalFormula) {
-            System.out.print(o + " ");
-        }
-        System.out.println();
-    }
-
     private static int mathSimple(int i, char obj) {
         if (totalFormula.get(i).equals(obj)) {
             Double value1 = (Double) totalFormula.get(i - 1);
-            Double value2 = (Double) totalFormula.get(i + 1);
+            Double value2 = getNegativeValue(i);
             totalFormula.set(i, math(value1, value2, obj));
             totalFormula.remove(i + 1);
             totalFormula.remove(i - 1);
             return 0;
         }
         return i;
+    }
+
+    private static Double getNegativeValue(int i) {
+        Double value2;
+        if (totalFormula.get(i + 1).equals('-')) {
+            totalFormula.remove(totalFormula.get(i + 1));
+            value2 = - (Double) totalFormula.get(i + 1);
+        } else {
+            value2 = (Double) totalFormula.get(i + 1);
+        }
+        return value2;
     }
 
     private static Double math(Double value1, Double value2, Character operand) {
@@ -139,7 +158,6 @@ public class Main {
         }
     }
 
-
     private static void setFormulaWithValues() {
         for (int i = 0, j = 0; i < totalFormula.size(); i++) {
             if (variables.get(j).equals(totalFormula.get(i))) {
@@ -155,7 +173,6 @@ public class Main {
     static ArrayList<Double> values = new ArrayList<>();
     static ArrayList<Object> totalFormula = new ArrayList<>();
 
-
     /**
      * Першим символом можу бути лише змінна або число
      */
@@ -166,10 +183,11 @@ public class Main {
         for (int i = 0; i < formula.length(); i++) {
             char sym = formula.charAt(i);           // покращуємо швидкодію, завдяки зменшенню виклику метода
             /* якщо це число, то додаємо в змінну всі цифри з числа, інакше переходимо далі*/
-            if (isNumber(sym)) {
-                num.append(sym);            // з цифр створюємо число
+            if (isNumber(sym) || sym == ',' || sym == '.') {// з цифр створюємо число
+                sym = getDot(sym);
+                num.append(sym);
                 /* для випадку коли стоъть цифра, а за нею змінна(необхідно завершити вводити число) */
-                if ((i + 1) < formula.length() && !isNumber(formula.charAt(i + 1))) {
+                if ((i + 1) < formula.length() && !isNumber(formula.charAt(i + 1)) && formula.charAt(i + 1) != '.') {
                     numbers.add(Double.parseDouble(num.toString()));
                     totalFormula.add(numbers.get(numbers.size() - 1));
                     num = new StringBuilder();
@@ -186,9 +204,28 @@ public class Main {
                 if ((i + 1) < formula.length()) {
                     shortForm(isNumber(formula.charAt(i + 1)));
                 }
-            } else if (isOperand(sym) || isOtherOperands(sym)) {
+            } else if (isOperand(sym)) {
                 operands.add(sym);
                 totalFormula.add(sym);
+                sym = formula.charAt(i + 1);
+                if ((sym == '-' || sym == '+') && isNumber(formula.charAt(i + 2))) {
+                    num.append(sym);
+                } else if ((sym == '-') && isValue(formula.charAt(i + 1))) {
+                    newOperand('-');
+                }
+            }
+        }
+    }
+
+    private static void newOperand(char operand) {
+        int lastIndex = operands.size() - 1;
+        for (int i = operands.size() - 1; i >= 0; i--) {
+            if (operand == '-' && operands.get(lastIndex) == '-') {
+                operands.set(lastIndex, '+');
+                break;
+            } else if (operand == '-' && operands.get(lastIndex) == '+') {
+                operands.set(lastIndex, '-');
+                break;
             }
         }
     }
@@ -207,15 +244,19 @@ public class Main {
             if (sym == '=') {
                 value.reverse();
                 return Double.valueOf(value.toString());
-            } else if (isNumber(sym)
-                    || sym == '-' || sym == '.' || sym == ',') {
-                if (sym == ',') {
-                    sym = '.';
-                }
+            } else if (isNumber(sym) || sym == '-' || sym == '.' || sym == ',') {
+                sym = getDot(sym);
                 value.append(sym);
             }
         }
         return null;
+    }
+
+    private static char getDot(char sym) {
+        if (sym == ',') {
+            sym = '.';
+        }
+        return sym;
     }
 
     private static void shortForm(boolean formula) {
@@ -229,11 +270,7 @@ public class Main {
         return sym == '^' || sym == '/' || sym == '*' || sym == '+' || sym == '-';
     }
 
-    static boolean isOtherOperands(char sym) {
-        return sym == ',' || sym == '.' || sym == '=';
-    }
-
-    private static boolean isNumber(char sym) {
+    protected static boolean isNumber(char sym) {
         return (sym >= '1' && sym <= '9') || sym == '0';
     }
 
@@ -253,6 +290,4 @@ public class Main {
         }
         return sNew.toString();
     }
-
-
 }
