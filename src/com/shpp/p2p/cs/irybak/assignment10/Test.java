@@ -63,7 +63,7 @@ public class Test {
             System.out.print("[" + operand + "] ");
         }
         System.out.println();
-        for (Character variable : variables) {
+        for (String variable : variables) {
             System.out.print("[" + variable + "] ");
         }
         System.out.println();

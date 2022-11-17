@@ -2,8 +2,6 @@ package com.shpp.p2p.cs.irybak.assignment10;
 
 import java.util.ArrayList;
 
-import static com.shpp.p2p.cs.irybak.assignment10.Main.variables;
-
 /**
  * Змінною може записуватись лише однією маленькою латинською літерою. Якщо літери буде дві - це вважається множенням.
  * якщо знак відсутній перед числом, воно вважається додатнім. Так, як наявність дужок не врахована в цій версії
@@ -45,19 +43,14 @@ public class Main {
     public static String sss = "\u001B[36m";
 
     public static void main(String[] args) {
-        String formula = args[0];
-        String[] variables2 = new String[args.length - 1];
-        System.arraycopy(args, 1, variables2, 0, args.length - 1);
-
-        parsingFormula(formula);
-        parsingVariables(variables2);
-        setFormulaWithValues();
-
+        getsNumbersInFormula(args);
+        /* FIXME: Prints operands for the test and result formula */
         for (Character operand : operands) {
             System.out.print("[" + operand + "] ");
         }
         System.out.println();
         System.out.println(totalFormula);
+
         for (int i = totalFormula.size() - 1; i > 0; i--) {
             if (totalFormula.get(i).equals('-')) {
                 totalFormula.set(i + 1, (Double) totalFormula.get(i + 1) * -1);
@@ -88,6 +81,24 @@ public class Main {
         for (int i = 0; i < totalFormula.size(); i++) {
             i = mathSimple(i, '+');
             i = mathSimple(i, '-');
+        }
+    }
+
+    private static void getsNumbersInFormula(String[] args) {
+        // Gets formula from the args
+        String formula = args[0];
+        // Gets variables and values
+        String[] variables2 = new String[args.length - 1];
+        System.arraycopy(args, 1, variables2, 0, args.length - 1);
+        // Gets formula with value instead of variables
+        parsingFormula(deleteSpaces(formula));
+        parsingVariables(variables2);
+
+        for (int i = 0, j = 0; i < totalFormula.size(); i++) {
+            if (variables.get(j).equals(totalFormula.get(i))) {
+                totalFormula.set(i, values.get(j));
+                j++;
+            }
         }
     }
 
@@ -126,7 +137,7 @@ public class Main {
         Double value2;
         if (totalFormula.get(i + 1).equals('-')) {
             totalFormula.remove(totalFormula.get(i + 1));
-            value2 = - (Double) totalFormula.get(i + 1);
+            value2 = -(Double) totalFormula.get(i + 1);
         } else {
             value2 = (Double) totalFormula.get(i + 1);
         }
@@ -158,17 +169,9 @@ public class Main {
         }
     }
 
-    private static void setFormulaWithValues() {
-        for (int i = 0, j = 0; i < totalFormula.size(); i++) {
-            if (variables.get(j).equals(totalFormula.get(i))) {
-                totalFormula.set(i, values.get(j));
-                j++;
-            }
-        }
-    }
 
     static ArrayList<Character> operands = new ArrayList<>();
-    static ArrayList<Character> variables = new ArrayList<>();
+    static ArrayList<String> variables = new ArrayList<>();
     static ArrayList<Double> numbers = new ArrayList<>();
     static ArrayList<Double> values = new ArrayList<>();
     static ArrayList<Object> totalFormula = new ArrayList<>();
@@ -184,48 +187,59 @@ public class Main {
             char sym = formula.charAt(i);           // покращуємо швидкодію, завдяки зменшенню виклику метода
             /* якщо це число, то додаємо в змінну всі цифри з числа, інакше переходимо далі*/
             if (isNumber(sym) || sym == ',' || sym == '.') {// з цифр створюємо число
-                sym = getDot(sym);
-                num.append(sym);
-                /* для випадку коли стоъть цифра, а за нею змінна(необхідно завершити вводити число) */
-                if ((i + 1) < formula.length() && !isNumber(formula.charAt(i + 1)) && formula.charAt(i + 1) != '.') {
-                    numbers.add(Double.parseDouble(num.toString()));
-                    totalFormula.add(numbers.get(numbers.size() - 1));
-                    num = new StringBuilder();
+//                if (num.isEmpty()) {
+//                    // Adds + if this is positive number
+//                    if (i == 0 || formula.charAt(i - 1) != '-') {
+//                        num.append('+');
+//                    }
+//                    // Adds - if this is negative number
+//                    if (i != 0 && formula.charAt(i - 1) == '-') {
+//                        num.append('-');
+//                    }
+//                }
+                // Adds '.' or ',' in the number if this is not integer
+                if (sym == ',' || sym == '.') {
+                    num.append('.');
                 }
-                /* для випадку коли стоїть цифра, а за нею літера(пропущене множення) */
-                if ((i + 1) < formula.length()) {
-                    shortForm(isValue(formula.charAt(i + 1)));
+                // When symbol this is number add it to the builder(result + or - and number. Example: -0.23)
+                if (isNumber(sym)) {
+                    num.append(sym);
+                }
+                // When this is last symbol of formula or next symbol operand or variable break add symbols to the number
+                if (i == (formula.length() - 1) || isValue(formula.charAt(i + 1)) || isOperand(formula.charAt(i + 1))) {
+                    totalFormula.add(Double.parseDouble(num.toString()));
+                    num = new StringBuilder();
+                    // When after the number we have the variable(without operand)(adds * in the list with operands)
+                    if (isValue(formula.charAt(i + 1))) {
+                        shortForm(isValue(formula.charAt(i + 1)));
+                    }
                 }
                 /* Якщо це змінна, тоді додаємо її до списку змінних */
             } else if (isValue(sym)) {
-                variables.add(sym);
-                totalFormula.add(sym);
+                // Adds + if this is positive number
+                if (i == 0 || formula.charAt(i - 1) == '+') {
+                    num.append('+');
+                }
+                // Adds - if this is negative number
+                if (i != 0 && formula.charAt(i - 1) == '-') {
+                    num.append('-');
+                }
+                num.append(sym);
+                variables.add(num.toString());
+                totalFormula.add(num.toString());
+                num = new StringBuilder();
                 /* для випадку коли стоїть цифра, а за нею літера(пропущене множення) */
-                if ((i + 1) < formula.length()) {
+                if (i < formula.length() - 1) {
                     shortForm(isNumber(formula.charAt(i + 1)));
                 }
             } else if (isOperand(sym)) {
                 operands.add(sym);
                 totalFormula.add(sym);
                 sym = formula.charAt(i + 1);
-                if ((sym == '-' || sym == '+') && isNumber(formula.charAt(i + 2))) {
+                if (isOperand(sym) && (sym == '-' || sym == '+')) {
                     num.append(sym);
-                } else if ((sym == '-') && isValue(formula.charAt(i + 1))) {
-                    newOperand('-');
+                    i++;
                 }
-            }
-        }
-    }
-
-    private static void newOperand(char operand) {
-        int lastIndex = operands.size() - 1;
-        for (int i = operands.size() - 1; i >= 0; i--) {
-            if (operand == '-' && operands.get(lastIndex) == '-') {
-                operands.set(lastIndex, '+');
-                break;
-            } else if (operand == '-' && operands.get(lastIndex) == '+') {
-                operands.set(lastIndex, '-');
-                break;
             }
         }
     }
