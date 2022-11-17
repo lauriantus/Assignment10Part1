@@ -44,20 +44,9 @@ public class Main {
 
     public static void main(String[] args) {
         getsNumbersInFormula(args);
-        /* FIXME: Prints operands for the test and result formula */
-        for (Character operand : operands) {
-            System.out.print("[" + operand + "] ");
-        }
-        System.out.println();
-        System.out.println(totalFormula);
+        System.out.println("\n" + totalFormula);
 
         for (int i = totalFormula.size() - 1; i > 0; i--) {
-            if (totalFormula.get(i).equals('-')) {
-                totalFormula.set(i + 1, (Double) totalFormula.get(i + 1) * -1);
-                totalFormula.remove(i);
-            } else if (totalFormula.get(i).equals('+')) {
-                totalFormula.remove(i);
-            }
             if (totalFormula.get(i).equals('^')) {
                 Double value = (Double) totalFormula.get(i - 1);
                 Double exponent = (Double) totalFormula.get(i + 1);
@@ -84,16 +73,26 @@ public class Main {
         }
     }
 
+    /**
+     * Отримує формулу і видаляє пробіли з неї для більшої зручності. Після цього розподіляє кожен елемент, а саме -
+     * операнди, числа та змінні.
+     * Записує масив значень та масив для змінних. А потім заміняє змінні в формулі на їх значення.
+     *
+     * @param args параметри що подаються на програму у форматі [формула, змінна = значення, змінна = значення тощо]
+     */
     private static void getsNumbersInFormula(String[] args) {
-        // Gets formula from the args
-        String formula = args[0];
-        // Gets variables and values
-        String[] variables2 = new String[args.length - 1];
-        System.arraycopy(args, 1, variables2, 0, args.length - 1);
         // Gets formula with value instead of variables
+        String formula = args[0];
         parsingFormula(deleteSpaces(formula));
-        parsingVariables(variables2);
 
+        // Gets variables and values
+        String[] preVariables = new String[args.length - 1];
+        System.arraycopy(args, 1, preVariables, 0, args.length - 1);
+        for (String variable : preVariables) {
+            values.add(getNumber(deleteSpaces(variable)));
+        }
+
+        // Sets value instead the variable
         for (int i = 0, j = 0; i < totalFormula.size(); i++) {
             if (variables.get(j).equals(totalFormula.get(i))) {
                 totalFormula.set(i, values.get(j));
@@ -241,12 +240,6 @@ public class Main {
                     i++;
                 }
             }
-        }
-    }
-
-    private static void parsingVariables(String[] variables) {
-        for (String variable : variables) {
-            values.add(getNumber(deleteSpaces(variable)));
         }
     }
 
