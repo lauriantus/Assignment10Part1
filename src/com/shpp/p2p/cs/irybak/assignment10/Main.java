@@ -1,6 +1,10 @@
 package com.shpp.p2p.cs.irybak.assignment10;
 
+import org.w3c.dom.ls.LSOutput;
+
 import java.util.ArrayList;
+
+import static java.lang.Double.isNaN;
 
 /**
  * Змінною може записуватись лише однією маленькою латинською літерою. Якщо літери буде дві - це вважається множенням.
@@ -44,32 +48,48 @@ public class Main {
 
     public static void main(String[] args) {
         getsNumbersInFormula(args);
-        System.out.println("\n" + totalFormula);
-
-        for (int i = totalFormula.size() - 1; i > 0; i--) {
-            if (totalFormula.get(i).equals('^')) {
-                Double value = (Double) totalFormula.get(i - 1);
-                Double exponent = (Double) totalFormula.get(i + 1);
-                totalFormula.set(i, math(value, exponent, '^'));
-                totalFormula.remove(i + 1);
-                totalFormula.remove(i - 1);
-            }
-        }
-        System.out.println(totalFormula);
-
-        for (Character operand : operands) {
-            System.out.print("[" + operand + "] ");
-        }
-        System.out.println();
+        raiseToPower();
         for (int i = 1; i < totalFormula.size(); i++) {
             i = mathSimple(i, '*');
             i = mathSimple(i, '/');
         }
-        setsPlusMinus();
         System.out.println(totalFormula);
         for (int i = 0; i < totalFormula.size(); i++) {
             i = mathSimple(i, '+');
             i = mathSimple(i, '-');
+        }
+    }
+
+    /**
+     * Checks the whole equation from the end. When finding a sign of exponentiation, performs the operation,
+     * removing the used elements. There is a reaction to raising a negative number to a fractional power.
+     */
+    private static void raiseToPower() {
+        // Looks for the exponentiation from the end of the equation
+        for (int i = totalFormula.size() - 1; i > 0; i--) {
+            if (totalFormula.get(i).equals('^')) {
+                // Raising to the degree
+                Double value = (Double) totalFormula.get(i - 1);
+                Double exponent = (Double) totalFormula.get(i + 1);
+                totalFormula.set(i, Math.pow(value, exponent));
+
+                // Checks for correctness.
+                isCorrectRaise(i, value, exponent);
+
+                // Removes those elements that were used
+                totalFormula.remove(i + 1);
+                totalFormula.remove(i - 1);
+            }
+        }
+    }
+
+    private static void isCorrectRaise(int i, Double value, Double exponent) {
+        // When you try to raise a negative number to a fractional power.
+        if (isNaN((Double)totalFormula.get(i))) {
+            System.out.println(sss + value + " ^ " + exponent + reset);
+            System.out.println(err + "The operation is undefined! You have probably tried to raise a " +
+                    "negative number to a non-integer degree." + reset);
+            System.exit(0);
         }
     }
 
@@ -186,16 +206,6 @@ public class Main {
             char sym = formula.charAt(i);           // покращуємо швидкодію, завдяки зменшенню виклику метода
             /* якщо це число, то додаємо в змінну всі цифри з числа, інакше переходимо далі*/
             if (isNumber(sym) || sym == ',' || sym == '.') {// з цифр створюємо число
-//                if (num.isEmpty()) {
-//                    // Adds + if this is positive number
-//                    if (i == 0 || formula.charAt(i - 1) != '-') {
-//                        num.append('+');
-//                    }
-//                    // Adds - if this is negative number
-//                    if (i != 0 && formula.charAt(i - 1) == '-') {
-//                        num.append('-');
-//                    }
-//                }
                 // Adds '.' or ',' in the number if this is not integer
                 if (sym == ',' || sym == '.') {
                     num.append('.');
