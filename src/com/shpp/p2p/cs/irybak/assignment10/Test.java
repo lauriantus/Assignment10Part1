@@ -67,11 +67,11 @@ public class Test {
             System.out.print("[" + variable + "] ");
         }
         System.out.println();
-        for (Double number : numbers) {
+        for (Object number : numbers) {
             System.out.print("[" + number + "] ");
         }
         System.out.println();
-        for (Double value : values) {
+        for (Object value : values) {
             System.out.print("[" + value + "] ");
         }
         System.out.println("\nSize var = " + variables.size() + "\tSize val = " + values.size());

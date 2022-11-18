@@ -1,6 +1,9 @@
 package com.shpp.p2p.cs.irybak.assignment10;
 
 import java.util.ArrayList;
+import java.util.Collections;
+
+import static java.lang.Double.isNaN;
 
 /**
  * Змінною може записуватись лише однією маленькою латинською літерою. Якщо літери буде дві - це вважається множенням.
@@ -48,9 +51,11 @@ public class Main {
 
         for (int i = totalFormula.size() - 1; i > 0; i--) {
             if (totalFormula.get(i).equals('^')) {
-                Double value = (Double) totalFormula.get(i - 1);
-                Double exponent = (Double) totalFormula.get(i + 1);
-                totalFormula.set(i, math(value, exponent, '^'));
+                getValue();
+                Object value = totalFormula.get(i - 1);
+                Double exponentDouble = (Double) totalFormula.get(i + 1);
+                Double result = Math.pow(Double.parseDouble());
+                totalFormula.set(i, math(value, result, '^'));
                 totalFormula.remove(i + 1);
                 totalFormula.remove(i - 1);
             }
@@ -73,6 +78,16 @@ public class Main {
         }
     }
 
+    private static Integer getValue(Object o) {
+
+        return 0;
+    }
+
+    private static Double getValue(Object o) {
+
+        return 0.0;
+    }
+
     /**
      * Отримує формулу і видаляє пробіли з неї для більшої зручності. Після цього розподіляє кожен елемент, а саме -
      * операнди, числа та змінні.
@@ -89,7 +104,7 @@ public class Main {
         String[] preVariables = new String[args.length - 1];
         System.arraycopy(args, 1, preVariables, 0, args.length - 1);
         for (String variable : preVariables) {
-            values.add(getNumber(deleteSpaces(variable)));
+            getNumber(deleteSpaces(variable));
         }
 
         // Sets value instead the variable
@@ -171,14 +186,15 @@ public class Main {
 
     static ArrayList<Character> operands = new ArrayList<>();
     static ArrayList<String> variables = new ArrayList<>();
-    static ArrayList<Double> numbers = new ArrayList<>();
-    static ArrayList<Double> values = new ArrayList<>();
+    static ArrayList<Object> numbers = new ArrayList<>();
+    static ArrayList<Object> values = new ArrayList<>();
     static ArrayList<Object> totalFormula = new ArrayList<>();
 
     /**
      * Першим символом можу бути лише змінна або число
      */
     private static void parsingFormula(String formula) {
+        boolean flag = false;
         System.out.println("\u001B[35m" + formula + reset);
         System.out.println("--------------------------------------------");
         StringBuilder num = new StringBuilder();
@@ -186,19 +202,10 @@ public class Main {
             char sym = formula.charAt(i);           // покращуємо швидкодію, завдяки зменшенню виклику метода
             /* якщо це число, то додаємо в змінну всі цифри з числа, інакше переходимо далі*/
             if (isNumber(sym) || sym == ',' || sym == '.') {// з цифр створюємо число
-//                if (num.isEmpty()) {
-//                    // Adds + if this is positive number
-//                    if (i == 0 || formula.charAt(i - 1) != '-') {
-//                        num.append('+');
-//                    }
-//                    // Adds - if this is negative number
-//                    if (i != 0 && formula.charAt(i - 1) == '-') {
-//                        num.append('-');
-//                    }
-//                }
                 // Adds '.' or ',' in the number if this is not integer
                 if (sym == ',' || sym == '.') {
                     num.append('.');
+                    flag = true;
                 }
                 // When symbol this is number add it to the builder(result + or - and number. Example: -0.23)
                 if (isNumber(sym)) {
@@ -206,7 +213,19 @@ public class Main {
                 }
                 // When this is last symbol of formula or next symbol operand or variable break add symbols to the number
                 if (i == (formula.length() - 1) || isValue(formula.charAt(i + 1)) || isOperand(formula.charAt(i + 1))) {
-                    totalFormula.add(Double.parseDouble(num.toString()));
+
+                    int res;
+                    double res2;
+                    if (flag) {
+                        res2 = Double.parseDouble(num.toString());
+                        numbers.add(res2);
+                        flag = false;
+                    } else {
+                        res = Integer.parseInt(num.toString());
+                        numbers.add(res);
+                    }
+
+                    totalFormula.add(numbers.get(numbers.size() - 1));
                     num = new StringBuilder();
                     // When after the number we have the variable(without operand)(adds * in the list with operands)
                     if (isValue(formula.charAt(i + 1))) {
@@ -243,27 +262,28 @@ public class Main {
         }
     }
 
-    private static Double getNumber(String variable) {
+    private static void getNumber(String variable) {
+        boolean flag = false;
         /* get value for every variable */
         StringBuilder value = new StringBuilder();
         for (int i = variable.length(); i > 0; i--) {
             char sym = variable.charAt(i - 1);
             if (sym == '=') {
                 value.reverse();
-                return Double.valueOf(value.toString());
+                if (flag) {
+                    values.add(Double.parseDouble(value.toString()));
+                    flag = false;
+                } else {
+                    values.add(Integer.parseInt(value.toString()));
+                }
             } else if (isNumber(sym) || sym == '-' || sym == '.' || sym == ',') {
-                sym = getDot(sym);
+                if (sym == ',' || sym == '.') {
+                    sym = '.';
+                    flag = true;
+                }
                 value.append(sym);
             }
         }
-        return null;
-    }
-
-    private static char getDot(char sym) {
-        if (sym == ',') {
-            sym = '.';
-        }
-        return sym;
     }
 
     private static void shortForm(boolean formula) {
