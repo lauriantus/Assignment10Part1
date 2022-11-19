@@ -1,63 +1,42 @@
 package com.shpp.p2p.cs.irybak.assignment10;
 
-import org.w3c.dom.ls.LSOutput;
-
 import java.util.ArrayList;
 
 import static java.lang.Double.isNaN;
 
-/**
- * Змінною може записуватись лише однією маленькою латинською літерою. Якщо літери буде дві - це вважається множенням.
- * якщо знак відсутній перед числом, воно вважається додатнім. Так, як наявність дужок не врахована в цій версії
- * більшість операції виконується без урахування знаку перед ними(знак наслідується результату операції). Виключенням
- * буде наступні типу виразів ->
- * [1 + - 2] -> [1 - 2] -> [-1];
- * [1 * - 2] -> [+ - 1 * 2] -> [- 1 * 2] -> [-2].
- * Найбільший
- * пріоритет має піднесення до степеня, потім множення та ділення, потім додавання та віднімання. Якщо степені
- * йдуть одна за одною, спочатку виконується та що справа, потім та що зліва.
- * Алгоритм:
- * <p>
- * - Перевірка на грубі помилки запису
- * Пошук наявності зайвих символів, відсутність значень для змінних, неправильний порядок символів тощо
- * <p>
- * - Видалення пробілів
- * <p>
- * - Parsing на елементи
- * Розбиває все рівняння на елементи для зручності видалення кожного з них при виконанні математичних операцій
- * <p>
- * - Робота зі степенями
- * Для врахування пріоритету необхідно спочатку виконати саме ці операції. До того ж з кінця рівняння.
- * Пошук першого степеня з кінця -> Виконання піднесення до степеня -> заміна трьох елементів на один результат ->
- * Пошук першого степеня з кінця -> ...  -> Степінь не знайдена -> завершення циклу
- * <p>
- * - Робота із множенням та діленням
- * Починаючи з самого початку виконуємо всі операції з множенням та діленням. Цикл буде завершено коли таких операцій
- * не буде в рівнянні
- * - Перевірка на наявність двох знаків підряд(наприклад, +-7+4) та заміна враховуючи правила заміни(-7+4)
- * - Робота із плюсами та мінусам
- * В результаті отримуємо вираз виду 4 = 5, або одразу результат.
- * - Якщо результат ще не отримано, то робимо операцію для видалення знаку =, тобто переносимо ліву частину в праву зі
- * зміною знаку й отримуємо вже результат.
- */
 public class Main {
-    public static String err = "\u001B[31m";
-    public static String reset = "\u001B[0m";
-    public static String ok = "\u001B[32m";
-    public static String sss = "\u001B[36m";
+    public static final String RED = "\u001B[31m";
+    public static final String RESET = "\u001B[0m";
+    public static final String GREEN = "\u001B[32m";
+    public static final String VIOLET = "\u001B[36m";
+    private static final String BLUE = "\u001B[34m";
+
+    static ArrayList<Character> operands = new ArrayList<>();
+    static ArrayList<String> variables = new ArrayList<>();
+    static ArrayList<Double> numbers = new ArrayList<>();
+    static ArrayList<Double> values = new ArrayList<>();
+    static ArrayList<Object> totalFormula = new ArrayList<>();
 
     public static void main(String[] args) {
+        System.out.println(getsResult(args));
+    }
+
+    public static Double getsResult(String[] args) {
         getsNumbersInFormula(args);
         raiseToPower();
         for (int i = 1; i < totalFormula.size(); i++) {
             i = mathSimple(i, '*');
             i = mathSimple(i, '/');
         }
-        System.out.println(totalFormula);
         for (int i = 0; i < totalFormula.size(); i++) {
             i = mathSimple(i, '+');
             i = mathSimple(i, '-');
         }
+        if (totalFormula.get(0).equals('(')) {
+            totalFormula.remove(0);
+            totalFormula.remove(totalFormula.size() - 1);
+        }
+        return (Double) totalFormula.get(0);
     }
 
     /**
@@ -83,22 +62,46 @@ public class Main {
         }
     }
 
+    /**
+     * Prints the formula
+     */
+    private static void printFormula() {
+        for (Object element : totalFormula) {
+            if (element.equals('-') || element.equals('+') || element.equals('*') || element.equals('/')
+                    || element.equals('^') || (Double) element >= 0) {
+                System.out.print(element + " ");
+            } else {
+                System.out.print("(" + element + ") ");
+            }
+        }
+        System.out.println();
+    }
+
+    /**
+     * Checks for the presence of raising a negative number to a fractional power.
+     * Outputs a text warning and exits the program.
+     *
+     * @param i        element in order in the equation
+     * @param value    A number that is raised to a power.
+     * @param exponent The degree to which a number is raised
+     */
     private static void isCorrectRaise(int i, Double value, Double exponent) {
         // When you try to raise a negative number to a fractional power.
-        if (isNaN((Double)totalFormula.get(i))) {
-            System.out.println(sss + value + " ^ " + exponent + reset);
-            System.out.println(err + "The operation is undefined! You have probably tried to raise a " +
-                    "negative number to a non-integer degree." + reset);
+        if (isNaN((Double) totalFormula.get(i))) {
+            System.out.println(VIOLET + value + " ^ " + exponent + RESET);
+            System.out.println(RED + "The operation is undefined! You have probably tried to raise a " +
+                    "negative number to a non-integer degree." + RESET);
             System.exit(0);
         }
     }
 
     /**
-     * Отримує формулу і видаляє пробіли з неї для більшої зручності. Після цього розподіляє кожен елемент, а саме -
-     * операнди, числа та змінні.
-     * Записує масив значень та масив для змінних. А потім заміняє змінні в формулі на їх значення.
+     * Gets the formula and removes spaces from it for more convenience. Then allocates each element, namely operands,
+     * numbers and variables. Writes an array of values and an array for variables. And then replaces the variables
+     * in the formula with their values.
      *
-     * @param args параметри що подаються на програму у форматі [формула, змінна = значення, змінна = значення тощо]
+     * @param args parameters that are submitted to the program in the format [formula, variable = value,
+     *             variable = value, etc.]
      */
     private static void getsNumbersInFormula(String[] args) {
         // Gets formula with value instead of variables
@@ -121,29 +124,10 @@ public class Main {
         }
     }
 
-    private static void setsPlusMinus() {
-        for (int i = 0; i < totalFormula.size(); i++) {
-            if (totalFormula.get(i).equals('+') && totalFormula.get(i + 1).equals('+')) {
-                totalFormula.remove(i + 1);
-                i = 0;
-            }
-            if (totalFormula.get(i).equals('+') && totalFormula.get(i + 1).equals('-')
-                    || totalFormula.get(i).equals('-') && totalFormula.get(i + 1).equals('+')) {
-                totalFormula.remove(i);
-                i = 0;
-            }
-            if (totalFormula.get(i).equals('-') && totalFormula.get(i + 1).equals('-')) {
-                totalFormula.remove(i + 1);
-                totalFormula.set(i, '+');
-                i = 0;
-            }
-        }
-    }
-
     private static int mathSimple(int i, char obj) {
         if (totalFormula.get(i).equals(obj)) {
             Double value1 = (Double) totalFormula.get(i - 1);
-            Double value2 = getNegativeValue(i);
+            Double value2 = (Double) totalFormula.get(i + 1);
             totalFormula.set(i, math(value1, value2, obj));
             totalFormula.remove(i + 1);
             totalFormula.remove(i - 1);
@@ -152,22 +136,8 @@ public class Main {
         return i;
     }
 
-    private static Double getNegativeValue(int i) {
-        Double value2;
-        if (totalFormula.get(i + 1).equals('-')) {
-            totalFormula.remove(totalFormula.get(i + 1));
-            value2 = -(Double) totalFormula.get(i + 1);
-        } else {
-            value2 = (Double) totalFormula.get(i + 1);
-        }
-        return value2;
-    }
-
     private static Double math(Double value1, Double value2, Character operand) {
         switch (operand) {
-            case '^' -> {
-                return Math.pow(value1, value2);
-            }
             case '*' -> {
                 return value1 * value2;
             }
@@ -177,30 +147,16 @@ public class Main {
             case '+' -> {
                 return value1 + value2;
             }
-            case '-' -> {
-                return value1 - value2;
-            }
             default -> {
-                System.out.println("Something wrong with operands.");
-                System.exit(0);
-                return 0.0;
+                return value1 - value2;
             }
         }
     }
-
-
-    static ArrayList<Character> operands = new ArrayList<>();
-    static ArrayList<String> variables = new ArrayList<>();
-    static ArrayList<Double> numbers = new ArrayList<>();
-    static ArrayList<Double> values = new ArrayList<>();
-    static ArrayList<Object> totalFormula = new ArrayList<>();
 
     /**
      * Першим символом можу бути лише змінна або число
      */
     private static void parsingFormula(String formula) {
-        System.out.println("\u001B[35m" + formula + reset);
-        System.out.println("--------------------------------------------");
         StringBuilder num = new StringBuilder();
         for (int i = 0; i < formula.length(); i++) {
             char sym = formula.charAt(i);           // покращуємо швидкодію, завдяки зменшенню виклику метода
@@ -215,16 +171,16 @@ public class Main {
                     num.append(sym);
                 }
                 // When this is last symbol of formula or next symbol operand or variable break add symbols to the number
-                if (i == (formula.length() - 1) || isValue(formula.charAt(i + 1)) || isOperand(formula.charAt(i + 1))) {
+                if (i == (formula.length() - 1) || isVariable(formula.charAt(i + 1)) || isOperand(formula.charAt(i + 1))) {
                     totalFormula.add(Double.parseDouble(num.toString()));
                     num = new StringBuilder();
                     // When after the number we have the variable(without operand)(adds * in the list with operands)
-                    if (isValue(formula.charAt(i + 1))) {
-                        shortForm(isValue(formula.charAt(i + 1)));
+                    if (isVariable(formula.charAt(i + 1))) {
+                        shortForm(isVariable(formula.charAt(i + 1)));
                     }
                 }
                 /* Якщо це змінна, тоді додаємо її до списку змінних */
-            } else if (isValue(sym)) {
+            } else if (isVariable(sym)) {
                 // Adds + if this is positive number
                 if (i == 0 || formula.charAt(i - 1) == '+') {
                     num.append('+');
@@ -240,6 +196,7 @@ public class Main {
                 /* для випадку коли стоїть цифра, а за нею літера(пропущене множення) */
                 if (i < formula.length() - 1) {
                     shortForm(isNumber(formula.charAt(i + 1)));
+                    shortForm(isVariable(formula.charAt(i + 1)));
                 }
             } else if (isOperand(sym)) {
                 operands.add(sym);
@@ -291,7 +248,7 @@ public class Main {
         return (sym >= '1' && sym <= '9') || sym == '0';
     }
 
-    static boolean isValue(char symbol) {
+    static boolean isVariable(char symbol) {
         for (int i = 'a'; i <= 'z'; i++) {
             if (symbol == i) return true;
         }

@@ -18,18 +18,18 @@ public class Test {
         }
         // gets result of tests
         if (mistakes > 0) {
-            System.out.println(err + "Mistakes have mistakes for equal in " + mistakes + " tests!" + reset);
+            System.out.println(RED + "Mistakes have mistakes for equal in " + mistakes + " tests!" + RESET);
             System.exit(0);
-        } else System.out.println(ok + "All OK!" + reset);
+        } else System.out.println(GREEN + "All OK!" + RESET);
 
     }
 
     private static void checksMistakes(String formulaForTest, int part) {
         // Outputs the formula on the console with spaces and without it
         System.out.println("----------------------------");
-        System.out.print("[" + sss + formulaForTest + reset + "]\t- >\t");
+        System.out.print("[" + VIOLET + formulaForTest + RESET + "]\t- >\t");
         formulaForTest = deleteSpaces(formulaForTest);
-        System.out.println("[" + sss + formulaForTest + reset + "]");
+        System.out.println("[" + VIOLET + formulaForTest + RESET + "]");
 
         /* Gets the mistake if string is empty */
         getMistakeIfNeed(formulaForTest.length() < 1, "Don't have the text for equal!");
