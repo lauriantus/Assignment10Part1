@@ -50,6 +50,7 @@ public class Assignment10Part1 {
      * @param args The equation that is set at startup.
      */
     public static void main(String[] args) {
+        Test.tests(args[0]);
         getsResult(args);
     }
 
