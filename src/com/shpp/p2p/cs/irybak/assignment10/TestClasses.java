@@ -1,9 +1,8 @@
 package com.shpp.p2p.cs.irybak.assignment10;
 
 import java.util.Objects;
-import com.shpp.p2p.cs.irybak.assignment10.Main;
 
-import static com.shpp.p2p.cs.irybak.assignment10.Main.*;
+import static com.shpp.p2p.cs.irybak.assignment10.Assignment10Part1.*;
 
 public class TestClasses {
 
@@ -16,8 +15,8 @@ public class TestClasses {
     }
 
     private static void test(String[] args, Double res) {
-        String formula = Main.deleteSpaces(args[0]);
-        Double result = Main.getsResult(args);
+        String formula = Assignment10Part1.deleteSpaces(args[0]);
+        Double result = Assignment10Part1.getsResult(args);
         for (int i = 0; i < formula.length(); i++) {
             System.out.print(formula.charAt(i) + " ");
         }
